@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  api:
+    build: docker
+    ports:
+      - "23400:9000" # Portainer
+      - "23401:50422" # SSH
+      - "23402:7681" # Web Terminal (ttyd)
+      - "23450:23450" # api - backend
+      - "23451:23451" # api - frontend
+    volumes:
+      - ./api/data/dind-data:/var/lib/docker
+      - ./api/app:/app
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    hostname: wisrovi
+    restart: always
+
+  environment:
+    build: docker
+    ports:
+      - "23410:9000" # Portainer
+      - "23411:50422" # SSH
+      - "23412:7681" # Web Terminal (ttyd)
+      - "23438:23438" # environment - redis
+      - "23439:23439" # environment - redis-commander
+      - "23435:23435" # environment - mlflow
+    volumes:
+      - ./environment/data/dind-data:/var/lib/docker
+      - ./environment/app:/app
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    hostname: wisrovi
+    restart: always
+
+  media:
+    build: docker
+    ports:
+      - "23420:9000" # Portainer
+      - "23421:50422" # SSH
+      - "23422:7681" # Web Terminal (ttyd)
+      - "23436:23436" # media - postgres
+      - "23444:23444" # media - minio-UI
+      - "23442:23442" # media - minio-backend
+      - "23443:23443" # media - dataset_filebrowser
+      - "23449:23449" # media - combined_samba
+    volumes:
+      - ./media/data/dind-data:/var/lib/docker
+      - ./media/app:/app
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    hostname: wisrovi
+    restart: always

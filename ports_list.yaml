@@ -1,0 +1,35 @@
+api:
+  portainer: 23400
+  ssh: 23401
+  ttyd: 23402
+  app:
+    backend: 23450
+    frontend: 23451
+    watchtower: 0
+    autoheal: 0
+environment:
+  portainer: 23410
+  ssh: 23411
+  ttyd: 23412
+  app:
+    redis: 23438
+    redis_commander: 23439
+    mlflow: 23435
+    watchtower: 0
+    autoheal: 0
+media:
+  portainer: 23420
+  ssh: 23421
+  ttyd: 23422
+  app:
+    postgres: 23436
+    backup: 0
+    restore: 0
+    mlflow-minio: [23444, 23442]
+    dataset_filebrowser: 23443
+    combined_samba: 23449
+    dataset_samba: 23445
+    config_samba: 23447
+    db_samba: 23448
+    watchtower: 0
+    autoheal: 0
