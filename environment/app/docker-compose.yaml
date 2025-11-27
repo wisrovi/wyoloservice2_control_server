@@ -1,0 +1,38 @@
+services:
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "23438:6379"
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+      - HTTP_USER=redis
+      - HTTP_PASSWORD=wyoloservice
+    restart: always
+    ports:
+      - "23439:8081"
+    depends_on:
+      - redis
+
+  mlflow:
+    build:
+      context: ./mlflow
+      dockerfile: Dockerfile
+    image: wisrovi/wyoloservice:mlflow
+    restart: always
+    environment:
+      # db
+      - MLFLOW_BACKEND_STORE_URI=postgresql+psycopg2://postgres:postgres@postgres:5432/wyoloservice # Conexión a PostgreSQL
+      # minio
+      - MLFLOW_S3_ENDPOINT_URL=http://mlflow-minio:9000 # URL del servidor MinIO
+      - AWS_ACCESS_KEY_ID=mlflow # Credenciales de MinIO
+      - AWS_SECRET_ACCESS_KEY=wyoloservice # Credenciales de MinIO
+      #mlflow
+      - MLFLOW_TRACKING_URI=http://mlflow:5000 # URI de seguimiento de MLflow
+      - MLFLOW_ARTIFACT_URI=s3://mlflow-artifacts/ # Bucket en MinIO donde se almacenarán los artefactos
+    command: [ "mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "postgresql+psycopg2://postgres:postgres@postgres:5432/wyoloservice", "--default-artifact-root", "s3://mlflow-artifacts/" ]
+    ports:
+      - "23435:5000"
