@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:13.2
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=wyoloservice
+    volumes:
+      - /app/postgres:/var/lib/postgresql/data
+    ports:
+      - "23436:5432"
+    restart: always
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    restart: always
+    environment:
+      - MINIO_ROOT_USER=mlflow
+      - MINIO_ROOT_PASSWORD=wyoloservice
+    ports:
+      - "23444:9000"
+      - "23442:9001"
+    volumes:
+      - /app/mlflow_minio:/data
+
+  sambas:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    image: wisrovi/wyoloservice:sambas
+    privileged: true
+    env_file:
+      - /usr/local/bin/control_host.env
+    volumes:
+      - /app/samba/datasets:/mnt/train_service_datasets
+      - /app/samba/config_models:/mnt/train_service_config_models
+      - /app/samba/db:/mnt/train_service_db
+
+    restart: always
+    cap_add:
+      - SYS_ADMIN
+      - DAC_READ_SEARCH
+    ports:
+      - "139:139"
+      - "23449:445"
+      - "137:137/udp"
+      - "138:138/udp"
+
+  filebrowser:
+    image: hurlenko/filebrowser
+    volumes:
+      - /app/samba/datasets:/data
+      - /app/filebrowser:/config
+    ports:
+      - "23443:8080"
+    environment:
+      - PUID=1000
+      - PGID=1000
+    restart: always
+    command: [ "--noauth", "--root", "/data", "--address", "0.0.0.0" ]
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    ports:
+      - "23420:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: always
+
+volumes:
+  portainer_data:
