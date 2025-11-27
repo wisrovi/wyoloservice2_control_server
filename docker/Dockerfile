@@ -1,25 +1,21 @@
-# Basic Docker-in-Docker with SSH and Portainer
-FROM ubuntu:22.04
+# Use official docker:dind image
+FROM docker:dind
 
-# Set environment variables to avoid interactive prompts
-ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
-ENV LANG=C.UTF-8
 
-RUN apt-get update && apt-get install -y \
-    openssh-server \
-    tmux \
-    curl \
-    docker.io \
+# Install dependencies
+RUN apk add --no-cache \
+    openssh \
     ttyd \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    bash \
+    shadow
 
-# Create SSH directory
+# Configure SSH
 RUN mkdir -p /run/sshd && \
     ssh-keygen -A && \
-    echo "root:password" | chpasswd && \
     sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
-sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
     sed -i 's/#Port 22/Port 50422/' /etc/ssh/sshd_config
 
 # Expose ports
@@ -29,5 +25,6 @@ EXPOSE 50422 9000 7681
 COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
-# Set entrypoint
+COPY control_host.env /usr/local/bin/control_host.env
+
 ENTRYPOINT ["/usr/local/bin/start.sh"]

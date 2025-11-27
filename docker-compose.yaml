@@ -1,54 +1,90 @@
 version: '3.8'
 
 services:
-  api:
-    build: docker
+
+  dind_api:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    container_name: dind_api
     ports:
       - "23400:9000" # Portainer
       - "23401:50422" # SSH
       - "23402:7681" # Web Terminal (ttyd)
-      - "23450:23450" # api - backend
-      - "23451:23451" # api - frontend
+      # Puertos de la API (backend/frontend)
+      - "23450:23450" # api backend
+      - "23451:23451" # api frontend
     volumes:
       - ./api/data/dind-data:/var/lib/docker
       - ./api/app:/app
     environment:
-      - DOCKER_TLS_CERTDIR=/certs
-    hostname: wisrovi
+      - DOCKER_TLS_CERTDIR=
+    privileged: true
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "docker info >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  environment:
-    build: docker
+  dind_environment:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    container_name: dind_environment
     ports:
       - "23410:9000" # Portainer
       - "23411:50422" # SSH
       - "23412:7681" # Web Terminal (ttyd)
-      - "23438:23438" # environment - redis
-      - "23439:23439" # environment - redis-commander
-      - "23435:23435" # environment - mlflow
+      # Puertos de environment (redis, redis-commander, mlflow)
+      - "23438:6379" # redis
+      - "23439:8081" # redis-commander
+      - "23435:5000" # mlflow
     volumes:
       - ./environment/data/dind-data:/var/lib/docker
       - ./environment/app:/app
     environment:
-      - DOCKER_TLS_CERTDIR=/certs
-    hostname: wisrovi
+      - DOCKER_TLS_CERTDIR=
+    privileged: true
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "docker info >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  media:
-    build: docker
+  dind_media:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    container_name: dind_media
     ports:
       - "23420:9000" # Portainer
       - "23421:50422" # SSH
       - "23422:7681" # Web Terminal (ttyd)
-      - "23436:23436" # media - postgres
-      - "23444:23444" # media - minio-UI
-      - "23442:23442" # media - minio-backend
-      - "23443:23443" # media - dataset_filebrowser
-      - "23449:23449" # media - combined_samba
+      # Puertos media (postgres, minio UI/backend, filebrowser, samba, otros)
+      - "23436:5432" # postgres
+      - "23444:9000" # mlflow-minio UI / minio service
+      - "23442:9001" # mlflow-minio console
+      - "23443:8080" # dataset_filebrowser
+      - "23449:445"  # combined_samba (mapped to SMB 445)
+      - "23445:4450" # dataset_samba (si se necesita puerto distinto, reservado)
+      - "23447:4451" # config_samba (puerto de ejemplo)
+      - "23448:4452" # db_samba (puerto de ejemplo)
     volumes:
       - ./media/data/dind-data:/var/lib/docker
       - ./media/app:/app
     environment:
-      - DOCKER_TLS_CERTDIR=/certs
-    hostname: wisrovi
+      - DOCKER_TLS_CERTDIR=
+    env_file:
+      - docker/config_host.env
+    privileged: true
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "docker info >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
