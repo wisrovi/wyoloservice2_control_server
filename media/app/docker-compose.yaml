@@ -60,14 +60,4 @@ services:
     restart: always
     command: [ "--noauth", "--root", "/data", "--address", "0.0.0.0" ]
 
-  portainer:
-    image: portainer/portainer-ce:latest
-    ports:
-      - "23420:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
-    restart: always
 
-volumes:
-  portainer_data:
