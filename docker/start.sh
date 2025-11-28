@@ -22,19 +22,8 @@ echo "Starting SSH server..."
 echo "Starting ttyd web terminal..."
 ttyd -p 7681 -i 0.0.0.0 bash &
 
-# Start Portainer
-echo "Starting Portainer..."
-docker rm -f portainer || true
-# Hash for password '1234567891011'
-HASH='$2b$12$ePHQ.0KcGw6/GKENVv2g3ex6BgRYDRt.8BblMnbtlRHh2nYgm9U1C'
-docker run -d --name portainer --restart=always \
-    -p 9000:9000 \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v portainer_data:/data \
-    portainer/portainer-ce:latest \
-    --admin-password "$HASH"
-
-echo "Portainer started."
+# Portainer startup disabled inside DIND to avoid lock/security timeout issues
+echo "Portainer startup disabled inside DIND image (managed externally)."
 
 # Keep the container running
 tail -f /dev/null
