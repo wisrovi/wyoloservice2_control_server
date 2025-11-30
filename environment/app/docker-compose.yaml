@@ -27,12 +27,37 @@ services:
       # db
       - MLFLOW_BACKEND_STORE_URI=postgresql+psycopg2://postgres:postgres@postgres:5432/wyoloservice # Conexión a PostgreSQL
       # minio
-      - MLFLOW_S3_ENDPOINT_URL=http://mlflow-minio:9000 # URL del servidor MinIO
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000 # URL del servidor MinIO
       - AWS_ACCESS_KEY_ID=mlflow # Credenciales de MinIO
       - AWS_SECRET_ACCESS_KEY=wyoloservice # Credenciales de MinIO
-      #mlflow
+      # mlflow
       - MLFLOW_TRACKING_URI=http://mlflow:5000 # URI de seguimiento de MLflow
       - MLFLOW_ARTIFACT_URI=s3://mlflow-artifacts/ # Bucket en MinIO donde se almacenarán los artefactos
     command: [ "mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "postgresql+psycopg2://postgres:postgres@postgres:5432/wyoloservice", "--default-artifact-root", "s3://mlflow-artifacts/" ]
     ports:
       - "23435:5000"
+
+  postgres:
+    image: postgres:13.2
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=wyoloservice
+    volumes:
+      - /dataset/postgres:/var/lib/postgresql/data
+    ports:
+      - "23436:5432"
+    restart: always
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    restart: always
+    environment:
+      - MINIO_ROOT_USER=mlflow
+      - MINIO_ROOT_PASSWORD=wyoloservice
+    ports:
+      - "23444:9000"
+      - "23442:9001"
+    volumes:
+      - /dataset/mlflow_minio:/data

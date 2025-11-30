@@ -1,0 +1,111 @@
+# Define reusable base resource constraints
+x-resources: &resources_base  
+  build:
+    context: ./docker
+    dockerfile: Dockerfile.dind
+  privileged: true
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+  deploy:
+    resources:
+      limits:
+        cpus: 4
+        memory: 8g
+      reservations:
+        cpus: 2
+        memory: 4g
+  restart: always
+  healthcheck:
+    test: ["CMD-SHELL", "docker info >/dev/null 2>&1 || exit 1"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 10s
+  networks:
+    - docker
+
+services:
+  dind_api:
+    <<: *resources_base
+    volumes:
+      - ./dind_data/api:/var/lib/docker
+      - ./api/app:/app
+      - ./config:/config
+      # Mount the certs volumes
+      - docker-certs-ca:/certs
+      - docker-certs-client:/certs/client
+    ports:
+      - "23400:9000" # Portainer
+      - "23401:50422" # SSH
+      - "23402:7681" # Web Terminal (ttyd)
+      # Puertos de la API (backend/frontend)
+      - "23450:23450" # api backend
+      - "23451:23451" # api frontend
+
+  dind_environment:
+    <<: *resources_base
+    volumes:
+      - ./dind_data/environment:/var/lib/docker
+      - ./environment/app:/app
+      - ./dataset:/dataset
+      # Mount the certs volumes
+      - docker-certs-ca:/certs
+      - docker-certs-client:/certs/client
+    ports:
+      - "23410:9000" # Portainer
+      - "23411:50422" # SSH
+      - "23412:7681" # Web Terminal (ttyd)
+      # Puertos de environment (redis, redis-commander, mlflow)
+      - "23438:23438" # redis
+      - "23439:23439" # redis-commander
+      - "23435:23435" # mlflow
+      - "23436:23436" # postgres
+      - "23444:23444" # mlflow-minio UI / minio service
+      - "23442:23442" # mlflow-minio console
+
+  dind_media:
+    <<: *resources_base
+    env_file:
+      - ./config/control_host.env
+    volumes:
+      - ./dind_data/media:/var/lib/docker
+      - ./media/app:/app
+      - ./dataset:/dataset
+      - ./config:/config
+      # Mount the certs volumes
+      - docker-certs-ca:/certs
+      - docker-certs-client:/certs/client
+    ports:
+      - "23420:9000" # Portainer
+      - "23421:50422" # SSH
+      - "23422:7681" # Web Terminal (ttyd)
+      # Puertos de media (postgres, minio, sambas, filebrowser)      
+      - "23443:8080" # dataset_filebrowser
+      - "23449:23449"  # combined_samba (mapped to SMB 445)
+      - "23445:4450" # dataset_samba (si se necesita puerto distinto, reservado)
+      - "23447:4451" # config_samba (puerto de ejemplo)
+      - "23448:4452" # db_samba (puerto de ejemplo)
+
+
+  # docker-client:
+  #   image: docker
+  #   environment:
+  #     DOCKER_TLS_CERTDIR: /certs
+  #   # Just loop at infinitum, we will get to this container by `docker exec`ing
+  #   command: [sh, -c, "while sleep 1; do :; done"]
+  #   networks:
+  #     - docker
+  #   depends_on:
+  #     - dind
+  #   volumes:
+  #     - docker-certs-client:/certs/client:ro
+
+volumes:
+  docker-certs-ca:
+  docker-certs-client:
+
+networks:
+  docker:

@@ -3,9 +3,3 @@ combined_samba
 - dataset_samba
 - config_samba
 - db_samba
-
-postgres
-backup
-restore
-
-mlflow-minio

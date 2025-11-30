@@ -1,57 +1,29 @@
 services:
-  postgres:
-    image: postgres:13.2
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=wyoloservice
-    volumes:
-      - /app/postgres:/var/lib/postgresql/data
-    ports:
-      - "23436:5432"
-    restart: always
-
-  minio:
-    image: minio/minio
-    command: server /data --console-address ":9001"
-    restart: always
-    environment:
-      - MINIO_ROOT_USER=mlflow
-      - MINIO_ROOT_PASSWORD=wyoloservice
-    ports:
-      - "23444:9000"
-      - "23442:9001"
-    volumes:
-      - /app/mlflow_minio:/data
-
   sambas:
-    build:
-      context: ./docker
-      dockerfile: Dockerfile
-    image: wisrovi/wyoloservice:sambas
-    privileged: true
+    image: dperson/samba
     env_file:
-      - /usr/local/bin/control_host.env
+      - /config/control_host.env
     volumes:
-      - /app/samba/datasets:/mnt/train_service_datasets
-      - /app/samba/config_models:/mnt/train_service_config_models
-      - /app/samba/db:/mnt/train_service_db
-
+      - /dataset/datasets:/data/datasets
+      - /dataset/config_models:/data/config_versions
+      - /dataset/db:/data/api_database
     restart: always
-    cap_add:
-      - SYS_ADMIN
-      - DAC_READ_SEARCH
+    command: >
+      -u "${CIFS_USER};${CIFS_PASS}"
+      -s "datasets;/data/datasets;yes;no;yes;all"
+      -s "config_versions;/data/config_versions;yes;no;yes;all"
+      -s "api_database;/data/api_database;yes;no;yes;all"
     ports:
-      - "139:139"
+      # - "139:139"
       - "23449:445"
-      - "137:137/udp"
-      - "138:138/udp"
+      # - "137:137/udp"
+      # - "138:138/udp"
 
   filebrowser:
     image: hurlenko/filebrowser
     volumes:
-      - /app/samba/datasets:/data
-      - /app/filebrowser:/config
+      - /dataset/datasets:/data
+      - /dataset/filebrowser:/config
     ports:
       - "23443:8080"
     environment:
