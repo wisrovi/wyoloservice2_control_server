@@ -1,6 +1,6 @@
-# Use official docker:dind image
 FROM docker:dind
 
+ENV DOCKER_TLS_CERTDIR=/certs
 ENV TZ=Etc/UTC
 
 # Install dependencies
@@ -11,7 +11,7 @@ RUN apk add --no-cache \
     bash \
     shadow
 
-# Configure SSH
+    # Configure SSH
 RUN mkdir -p /run/sshd && \
     ssh-keygen -A && \
     sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
@@ -24,7 +24,5 @@ EXPOSE 50422 9000 7681
 # Copy start script
 COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
-
-COPY control_host.env /usr/local/bin/control_host.env
 
 ENTRYPOINT ["/usr/local/bin/start.sh"]

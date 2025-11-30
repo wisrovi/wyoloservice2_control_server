@@ -2,14 +2,15 @@ services:
 
   api:
     build:
-      context: ./app
+      context: .
       dockerfile: Dockerfile
     # El puerto 8000 es para la comunicación interna, pero lo exponemos
     # al host en 8001 para poder hacer pruebas si es necesario.
     ports:
-      - "8001:8000"
+      - "23450:8000"
     volumes:
       - ./app:/app
+      - /config:/config
     # NOTA: La API necesita una instancia de Redis.
     # Deberías añadir un servicio 'redis' aquí para que la API funcione completamente.
     # depends_on:

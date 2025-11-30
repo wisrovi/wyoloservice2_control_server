@@ -22,8 +22,5 @@ echo "Starting SSH server..."
 echo "Starting ttyd web terminal..."
 ttyd -p 7681 -i 0.0.0.0 bash &
 
-# Portainer startup disabled inside DIND to avoid lock/security timeout issues
-echo "Portainer startup disabled inside DIND image (managed externally)."
-
 # Keep the container running
 tail -f /dev/null

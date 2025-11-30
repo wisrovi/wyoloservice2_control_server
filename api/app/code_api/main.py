@@ -3,7 +3,7 @@ import shutil
 import uuid
 
 import yaml
-from app.database import TrainingHistory, db
+from database import TrainingHistory, db
 
 # from api.minio import download_model, list_models
 
@@ -14,7 +14,7 @@ CONFIG_DIR = "/config_versions"
 os.makedirs(CONFIG_DIR, exist_ok=True)
 
 
-config_path = "/code/app/config.yaml"
+config_path = "/config/config.yaml"
 with open(config_path, "r") as f:
     cfg = yaml.safe_load(f)
 
@@ -46,15 +46,13 @@ def recreate(
     with open(config_path, "r") as f:
         user_config = yaml.safe_load(f)
 
-    # respetar el parámetro resume
-    user_config.setdefault("train", {})
-    user_config["train"]["resume"] = bool(resume)
+    # validar si resume esta presente
+    user_config["train"]["resume"] = True
 
     user_config["request_by"] = user_code
     user_config["task_id"] = task_id
 
     # esto fuerza el sistema a que use el modelo entregado y reportado como last_model
-    user_config.setdefault("sweeper", {})
     user_config["sweeper"]["model"] = ["choice", last_model]
     user_config["model"] = last_model
     user_config["recreate"] = True
@@ -62,12 +60,6 @@ def recreate(
     # actualizar el config_path en el archivo de configuracion original
     with open(config_path, "w") as f:
         yaml.dump(user_config, f)
-
-    # calcular cantidad antes de insertar para evitar referencia a variable no definida
-    try:
-        count = len(db.get_all())
-    except Exception:
-        count = 0
 
     # Insertar un nuevo usuario con el nuevo campo
     db.insert(
@@ -79,6 +71,11 @@ def recreate(
             config_path=config_path,
         )
     )
+
+    try:
+        count = len(db.get_all())
+    except Exception:
+        count = 0
 
     queue_manager.publish(
         queue_name=destinity,
