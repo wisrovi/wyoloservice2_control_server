@@ -3,15 +3,20 @@ services:
     image: dperson/samba
     env_file:
       - /config/control_host.env
+    environment:
+      - TZ=Europe/Madrid # Time zone
+      - USERID=1000 # User ID (customize based on your system)
+      - GROUPID=1000 # Group ID (customize based on your system)
+      - SAMBA_USERS=${CIFS_USER}:${CIFS_PASS}
     volumes:
       - /dataset/datasets:/data/datasets
       - /dataset/config_models:/data/config_versions
       - /dataset/db:/data/api_database
     restart: always
     command: >
-      -u "${CIFS_USER};${CIFS_PASS}"
-      -s "datasets;/data/datasets;yes;no;yes;all"
-      -s "config_versions;/data/config_versions;yes;no;yes;all"
+      -u "${CIFS_USER};${CIFS_PASS}" 
+      -s "datasets;/data/datasets;yes;no;yes;all" 
+      -s "config_versions;/data/config_versions;yes;no;yes;all" 
       -s "api_database;/data/api_database;yes;no;yes;all"
     ports:
       # - "139:139"
@@ -31,5 +36,3 @@ services:
       - PGID=1000
     restart: always
     command: [ "--noauth", "--root", "/data", "--address", "0.0.0.0" ]
-
-

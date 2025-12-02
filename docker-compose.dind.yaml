@@ -83,11 +83,11 @@ services:
       - "23421:50422" # SSH
       - "23422:7681" # Web Terminal (ttyd)
       # Puertos de media (postgres, minio, sambas, filebrowser)      
-      - "23443:8080" # dataset_filebrowser
+      - "23443:23443" # dataset_filebrowser
       - "23449:23449"  # combined_samba (mapped to SMB 445)
-      - "23445:4450" # dataset_samba (si se necesita puerto distinto, reservado)
-      - "23447:4451" # config_samba (puerto de ejemplo)
-      - "23448:4452" # db_samba (puerto de ejemplo)
+      # - "23445:4450" # dataset_samba (si se necesita puerto distinto, reservado)
+      # - "23447:4451" # config_samba (puerto de ejemplo)
+      # - "23448:4452" # db_samba (puerto de ejemplo)
 
 
   # docker-client:

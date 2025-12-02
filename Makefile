@@ -10,6 +10,9 @@ start:
 stop:
 	docker-compose -f docker-compose.dind.yaml down
 
+build:
+	docker-compose -f docker-compose.dind.yaml build
+
 into_environment:
 	docker-compose -f docker-compose.dind.yaml exec dind_environment sh
 
