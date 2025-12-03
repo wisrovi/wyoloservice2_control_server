@@ -65,6 +65,8 @@ services:
       - "23436:23436" # postgres
       - "23444:23444" # mlflow-minio UI / minio service
       - "23442:23442" # mlflow-minio console
+    env_file:
+      - ./config/control_host.env
 
   dind_media:
     <<: *resources_base

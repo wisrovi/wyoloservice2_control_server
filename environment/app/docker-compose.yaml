@@ -9,8 +9,8 @@ services:
     image: rediscommander/redis-commander:latest
     environment:
       - REDIS_HOSTS=local:redis:6379
-      - HTTP_USER=redis
-      - HTTP_PASSWORD=wyoloservice
+      - HTTP_USER=${CIFS_USER}
+      - HTTP_PASSWORD=${CIFS_PASS}
     restart: always
     ports:
       - "23439:8081"
@@ -28,20 +28,20 @@ services:
       - MLFLOW_BACKEND_STORE_URI=postgresql+psycopg2://postgres:postgres@postgres:5432/wyoloservice # Conexión a PostgreSQL
       # minio
       - MLFLOW_S3_ENDPOINT_URL=http://minio:9000 # URL del servidor MinIO
-      - AWS_ACCESS_KEY_ID=mlflow # Credenciales de MinIO
-      - AWS_SECRET_ACCESS_KEY=wyoloservice # Credenciales de MinIO
+      - AWS_ACCESS_KEY_ID=${CIFS_USER} # Credenciales de MinIO
+      - AWS_SECRET_ACCESS_KEY=${CIFS_PASS} # Credenciales de MinIO
       # mlflow
       - MLFLOW_TRACKING_URI=http://mlflow:5000 # URI de seguimiento de MLflow
       - MLFLOW_ARTIFACT_URI=s3://mlflow-artifacts/ # Bucket en MinIO donde se almacenarán los artefactos
-    command: [ "mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "postgresql+psycopg2://postgres:postgres@postgres:5432/wyoloservice", "--default-artifact-root", "s3://mlflow-artifacts/" ]
+    command: [ "mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "postgresql+psycopg2://${CIFS_USER}:${CIFS_PASS}@postgres:5432/wyoloservice", "--default-artifact-root", "s3://mlflow-artifacts/" ]
     ports:
       - "23435:5000"
 
   postgres:
     image: postgres:13.2
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=${CIFS_USER}
+      - POSTGRES_PASSWORD=${CIFS_PASS}
       - POSTGRES_DB=wyoloservice
     volumes:
       - /dataset/postgres:/var/lib/postgresql/data
@@ -50,12 +50,12 @@ services:
     restart: always
 
   minio:
-    image: minio/minio
+    image: minio/minio:RELEASE.2025-02-28T09-55-16Z
     command: server /data --console-address ":9001"
     restart: always
     environment:
-      - MINIO_ROOT_USER=mlflow
-      - MINIO_ROOT_PASSWORD=wyoloservice
+      - MINIO_ROOT_USER=${CIFS_USER}
+      - MINIO_ROOT_PASSWORD=${CIFS_PASS}
     ports:
       - "23444:9000"
       - "23442:9001"
