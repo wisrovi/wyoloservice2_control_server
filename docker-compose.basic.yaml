@@ -1,0 +1,159 @@
+# Define reusable base resource constraints
+x-resources: &resources_base
+  privileged: true
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+  deploy:
+    resources:
+      limits:
+        cpus: 4
+        memory: 8g
+      reservations:
+        cpus: 2
+        memory: 4g
+  restart: always
+  env_file:
+    - ./config/control_host.env
+
+services:
+  # --------------------------------------------
+  #  Media Sharing Service
+  # --------------------------------------------
+  sambas:
+    <<: *resources_base
+    image: dperson/samba
+    environment:
+      - TZ=Europe/Madrid # Time zone
+      - USERID=1000 # User ID (customize based on your system)
+      - GROUPID=1000 # Group ID (customize based on your system)
+      - SAMBA_USERS=${CIFS_USER}:${CIFS_PASS}
+    volumes:
+      - ./dataset/datasets:/data/datasets
+      - ./dataset/config_models:/data/config_versions
+      - ./dataset/db:/data/api_database
+    command: >
+      -u "${CIFS_USER};${CIFS_PASS}"  -s "datasets;/data/datasets;yes;no;yes;all"  -s "config_versions;/data/config_versions;yes;no;yes;all"  -s "api_database;/data/api_database;yes;no;yes;all"
+    ports:
+      # - "139:139"
+      - "23449:445"
+      # - "137:137/udp"
+      # - "138:138/udp"
+
+  filebrowser:
+    <<: *resources_base
+    image: hurlenko/filebrowser
+    volumes:
+      - ./dataset/datasets:/data
+      - ./dataset/filebrowser:/config
+    ports:
+      - "23443:8080"
+    environment:
+      - PUID=1000
+      - PGID=1000
+    command: [ "--noauth", "--root", "/data", "--address", "0.0.0.0" ]
+
+  # --------------------------------------------
+  #  Environment Services
+  # --------------------------------------------
+  redis:
+    <<: *resources_base
+    image: redis:latest
+    ports:
+      - "23438:6379"
+
+  redis-commander:
+    <<: *resources_base
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+      - HTTP_USER=${CIFS_USER}
+      - HTTP_PASSWORD=${CIFS_PASS}
+    ports:
+      - "23439:8081"
+    depends_on:
+      - redis
+
+  mlflow:
+    <<: *resources_base
+    image: ghcr.io/mlflow/mlflow:v2.17.2
+    environment:
+      # db
+      - MLFLOW_BACKEND_STORE_URI=postgresql+psycopg2://postgres:postgres@postgres:5432/wyoloservice # Conexión a PostgreSQL
+      # minio
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000 # URL del servidor MinIO
+      - AWS_ACCESS_KEY_ID=${CIFS_USER} # Credenciales de MinIO
+      - AWS_SECRET_ACCESS_KEY=${CIFS_PASS} # Credenciales de MinIO
+      # mlflow
+      - MLFLOW_TRACKING_URI=http://mlflow:5000 # URI de seguimiento de MLflow
+      - MLFLOW_ARTIFACT_URI=s3://mlflow-artifacts/ # Bucket en MinIO donde se almacenarán los artefactos
+      # Disable security headers for iframe embedding
+      - MLFLOW_DISABLE_NGINX_HEADER=true
+      - UVICORN_HEADERS_SERVER=mlflow
+    command: [ 
+        "mlflow", "server", 
+        "--host", "0.0.0.0", 
+        "--port", "5000", 
+        "--backend-store-uri", "postgresql+psycopg2://${CIFS_USER}:${CIFS_PASS}@postgres:5432/wyoloservice", 
+        "--default-artifact-root", "s3://mlflow-artifacts/"
+    ]
+    ports:
+      - "23435:5000"
+    depends_on:
+      - postgres
+      - minio
+
+  postgres:
+    <<: *resources_base
+    image: postgres:13.2
+    environment:
+      - POSTGRES_USER=${CIFS_USER}
+      - POSTGRES_PASSWORD=${CIFS_PASS}
+      - POSTGRES_DB=wyoloservice
+    volumes:
+      - ./dataset/postgres:/var/lib/postgresql/data
+    ports:
+      - "23436:5432"
+
+  minio:
+    <<: *resources_base
+    image: minio/minio:RELEASE.2025-02-28T09-55-16Z
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${CIFS_USER}
+      - MINIO_ROOT_PASSWORD=${CIFS_PASS}
+    ports:
+      - "23444:9000"
+      - "23442:9001"
+    volumes:
+      - ./dataset/mlflow_minio:/data
+
+  # --------------------------------------------
+  #  End of Services
+  # --------------------------------------------
+  neuroforge-api:
+    <<: *resources_base
+    build:
+      context: ./api/app
+      dockerfile: Dockerfile
+    image: wisrovi/w_darwin_ops-backend:latest
+    ports:
+      - "23450:8000"
+    volumes:
+      - ./api/app/code_api:/app
+      - ./config:/config
+    # NOTA: La API necesita una instancia de Redis.
+    # Deberías añadir un servicio 'redis' aquí para que la API funcione completamente.
+    depends_on:
+      - redis
+      - mlflow
+    environment:
+      - PYTHONPATH=/app
+    # command: tail -f /dev/null
+
+networks:
+  default:
+    external: true
+    name: wyoloservice_network

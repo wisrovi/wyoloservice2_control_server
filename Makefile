@@ -1,16 +1,18 @@
+# --------------------------------------------------
+# Docker-in-Docker
+# --------------------------------------------------
 
-
-start:
+start_dind:
 	docker-compose -f docker-compose.dind.yaml up -d --build
 
 	docker-compose -f docker-compose.dind.yaml exec dind_environment sh -c "cd /app && docker-compose up -d"
 	docker-compose -f docker-compose.dind.yaml exec dind_media sh -c "cd /app && docker-compose up -d"
 	docker-compose -f docker-compose.dind.yaml exec dind_api sh -c "cd /app && docker-compose up -d"
 
-stop:
+stop_dind:
 	docker-compose -f docker-compose.dind.yaml down
 
-build:
+build_dind:
 	docker-compose -f docker-compose.dind.yaml build
 
 into_environment:
@@ -39,6 +41,22 @@ restart_media:
 
 restart_api:
 	docker-compose -f docker-compose.dind.yaml exec dind_api sh -c "cd
+
+
+# --------------------------------------------------
+# Basic
+# --------------------------------------------------
+start_basic:
+	docker-compose -f docker-compose.basic.yaml --env-file config/control_host.env --compatibility up -d --build  --force-recreate --no-deps  --pull always
+
+stop_basic:
+	docker-compose -f docker-compose.basic.yaml down
+
+create_network:
+	docker network create wyoloservice_network || true
+
+start_api_only:
+	docker-compose -f docker-compose.basic.yaml --env-file config/control_host.env --compatibility up -d --build --force-recreate --no-deps --pull always neuroforge-api
 
 .PHONY: start stop into_environment into_media into_api logs_environment logs_media logs_api restart_environment restart_media restart_api
 
