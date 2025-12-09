@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../NeuralForgeAI"
+		},
+		{
+			"path": "../wyoloservice2_worker"
+		}
+	],
+	"settings": {}
+}
