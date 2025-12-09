@@ -78,7 +78,10 @@ services:
 
   mlflow:
     <<: *resources_base
-    image: ghcr.io/mlflow/mlflow:v2.17.2
+    image: wisrovi/w_darwin_ops-mlflow:latest
+    build:
+      context: ./environment/app/mlflow
+      dockerfile: Dockerfile
     environment:
       # db
       - MLFLOW_BACKEND_STORE_URI=postgresql+psycopg2://postgres:postgres@postgres:5432/wyoloservice # Conexión a PostgreSQL
@@ -129,6 +132,11 @@ services:
       - "23442:9001"
     volumes:
       - ./dataset/mlflow_minio:/data
+
+  # bucket initialization
+  # models
+  # mlflow-artifacts
+  # dvcstorage
 
   # --------------------------------------------
   #  End of Services
