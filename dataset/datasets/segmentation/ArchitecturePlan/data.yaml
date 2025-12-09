@@ -1,0 +1,12 @@
+train: /datasets/segmentacion/ArchitecturePlan/train/images
+val: /datasets/segmentacion/ArchitecturePlan/valid/images
+
+nc: 12
+names: ['balcony', 'bathroom', 'bedroom', 'children_room', 'dining_room', 'hallway', 'home_office', 'kitchen', 'living_room', 'toilet', 'utility_room', 'walk_in_closet']
+
+roboflow:
+  workspace: myspace-h5sfv
+  project: segmentation_one
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/myspace-h5sfv/segmentation_one/dataset/1
