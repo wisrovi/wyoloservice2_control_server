@@ -1,25 +1,34 @@
 # https://fastapi.tiangolo.com/deployment/docker/#create-the-fastapi-code
 
-FROM python:3.10.16-alpine3.20
+FROM wisrovi/agents:gpu
 
 USER root
-
-# set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+SHELL ["/usr/bin/bash", "-c"]
 
 
 # Configurar el entorno de trabajo
-WORKDIR /code
+WORKDIR /requirements
+
 
 # Instalar dependencias
-COPY requirements.txt /code/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+COPY requirements.txt /requirements
+RUN pip install -r /requirements/requirements.txt
 
 
 WORKDIR /code/app
-COPY ./code_api /code/app
+COPY ./code_api .
 
 WORKDIR /code/
 
-CMD ["fastapi", "run", "app/main.py", "--proxy-headers", "--port", "8000", "--workers", "8"]
+EXPOSE 8000
+
+
+# CMD ["fastapi", "run", "app/main.py", "--proxy-headers", "--port", "8000", "--workers", "8"]
+
+# with gunicorn: gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind
+# CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:8000", "--workers", "8"]
+
+
+
+# with uvicorn: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 8
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "8"]
