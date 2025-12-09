@@ -35,12 +35,16 @@ services:
       - ./dataset/config_models:/data/config_versions
       - ./dataset/db:/data/api_database
     command: >
-      -u "${CIFS_USER};${CIFS_PASS}"  -s "datasets;/data/datasets;yes;no;yes;all"  -s "config_versions;/data/config_versions;yes;no;yes;all"  -s "api_database;/data/api_database;yes;no;yes;all"
+      -u "${CIFS_USER};${CIFS_PASS}"  
+      -s "datasets;/data/datasets;yes;no;yes;all"  
+      -s "config_versions;/data/config_versions;yes;no;yes;all"  
+      -s "api_database;/data/api_database;yes;no;yes;all"
     ports:
       # - "139:139"
       - "23449:445"
       # - "137:137/udp"
       # - "138:138/udp"
+  # example: smb://192.168.1.84:23449/datasets/
 
   filebrowser:
     <<: *resources_base
