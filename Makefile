@@ -50,7 +50,7 @@ start_basic:
 	docker-compose -f docker-compose.basic.yaml --env-file config/control_host.env --compatibility up -d --build  --force-recreate --no-deps  --pull always
 
 stop_basic:
-	docker-compose -f docker-compose.basic.yaml down
+	docker-compose -f docker-compose.basic.yaml --env-file config/control_host.env down
 
 create_network:
 	docker network create wyoloservice_network || true
