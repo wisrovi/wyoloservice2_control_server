@@ -154,7 +154,7 @@ services:
     ports:
       - "23450:8000"
     volumes:
-      - ./api/app/code_api:/app
+      - ./api/app/code_api:/code/app
       - ./config:/config
     # NOTA: La API necesita una instancia de Redis.
     # Deberías añadir un servicio 'redis' aquí para que la API funcione completamente.
