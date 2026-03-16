@@ -1,0 +1,45 @@
+=== TRAINING SUMMARY ===
+
+Experiment: ArchitecturePlan
+Task ID: test_training_001
+Model: yolov8n-seg.pt
+Type: yolo
+Dataset: ArchitecturePlan
+Training Time: 15.86 seconds
+Timestamp: 20251211_144225
+
+=== METRICS ===
+
+metrics/precision(B): 0.0060500922186375395
+metrics/recall(B): 0.20555555555555557
+metrics/mAP50(B): 0.016807291225604714
+metrics/mAP50-95(B): 0.011994141683011132
+metrics/precision(M): 0.0060500922186375395
+metrics/recall(M): 0.20555555555555557
+metrics/mAP50(M): 0.02899479122560472
+metrics/mAP50-95(M): 0.013382531644747342
+fitness: 0.025376673327758476
+
+=== ARTIFACTS ===
+
+Training artifacts copied to this directory:
+- BoxF1_curve.png
+- BoxPR_curve.png
+- BoxP_curve.png
+- BoxR_curve.png
+- MaskF1_curve.png
+- MaskPR_curve.png
+- MaskP_curve.png
+- MaskR_curve.png
+- args.yaml
+- confusion_matrix.png
+- confusion_matrix_normalized.png
+- labels.jpg
+- results.csv
+- results.png
+- train_batch0.jpg
+- train_batch1.jpg
+- train_batch2.jpg
+- val_batch0_labels.jpg
+- val_batch0_pred.jpg
+- weights

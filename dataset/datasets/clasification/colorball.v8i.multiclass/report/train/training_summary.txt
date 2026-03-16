@@ -1,0 +1,30 @@
+=== TRAINING SUMMARY ===
+
+Experiment: color_ball_v2
+Task ID: test_training_001
+Model: yolov8n-cls.pt
+Type: yolo
+Dataset: colorball.v8i.multiclass
+Training Time: 22.95 seconds
+Timestamp: 20251211_145754
+
+=== METRICS ===
+
+metrics/accuracy_top1: 0.47058823704719543
+metrics/accuracy_top5: 1.0
+fitness: 0.7352941185235977
+
+=== ARTIFACTS ===
+
+Training artifacts copied to this directory:
+- args.yaml
+- confusion_matrix.png
+- confusion_matrix_normalized.png
+- results.csv
+- results.png
+- train_batch0.jpg
+- train_batch1.jpg
+- train_batch2.jpg
+- val_batch0_labels.jpg
+- val_batch0_pred.jpg
+- weights
