@@ -1,0 +1,96 @@
+# ---------------------------------------------------------------------------
+# Debug / Infrastructure
+# ---------------------------------------------------------------------------
+debug: "192.168.1.84"
+type: "yolo"
+
+# ---------------------------------------------------------------------------
+# Base training config (valores por defecto, el sweeper los puede sobrescribir)
+# ---------------------------------------------------------------------------
+train:
+  batch: 0.85         # fracción de VRAM — el sweeper NO lo toca, fallback lo reduce
+  data: /dataset/
+  epochs: 250
+  imgsz: 640
+  cos_lr: true        # recomendado por defecto
+  lr0: 0.01
+  lrf: 0.01           # lrf bajo → convergencia más estable al final
+  dropout: 0.0
+  erasing: 0.0
+  device: 0
+  workers: 8          # fallback lo reducirá si hay OOM
+
+# ---------------------------------------------------------------------------
+# Sweeper (Optuna)
+# ---------------------------------------------------------------------------
+sweeper:
+  version: 1
+  study_name: "Eyesdcar_FirstClassifier"
+  direction: maximize
+  fitness: "metrics/accuracy_top1"
+  n_trials: 15
+  sampler: "TPESampler"
+  algorithm: optuna
+
+  # Recursos por trial para ser usados por Ray Tune — el sweeper los asigna a cada trial, el fallback los reduce si hay OOM
+  distributed: true    # false → modo local, true → Ray cluster
+  gpus_per_trial: 1    # GPUs por trial
+  cpus_per_trial: 4    # CPUs por trial
+
+  # Espacio de búsqueda — cada param sobreescribe el valor base de `train`
+  search_space:
+    model: ["choice", "yolov8n-cls.pt", "yolo11s-cls.pt", "yolo11n-cls.pt"]
+    train:
+      imgsz:        ["choice", 480, 640]
+      epochs:       ["choice", 150, 200, 300]
+      lr0:          ["loguniform", 1e-4, 1e-2]
+      lrf:          ["choice", 0.01, 0.2]
+      weight_decay: ["loguniform", 1e-5, 1e-3]
+      dropout:      ["choice", 0.0, 0.1, 0.25]
+      mixup:        ["choice", 0.0, 0.1, 0.2]
+      cos_lr:       ["choice", true, false]
+      # --- comentados hasta tener más datos de ablation ---
+      # momentum:       ["uniform", 0.8, 0.98]
+      # warmup_epochs:  ["choice", 2, 5]
+      # optimizer:      ["choice", "Adam", "AdamW"]
+      # freeze:         ["range", 1, 15, 1]
+      # workers:        ["range", 4, 8, 1]
+
+# ---------------------------------------------------------------------------
+# Fallback OOM — se aplican en orden si hay crash de workers/memoria
+# ---------------------------------------------------------------------------
+fallback_overrides:
+  - {}                                          # intento 0: config original
+  - { workers: 4 }                              # intento 1: menos workers
+  - { workers: 2, batch: 0.35 }                 # intento 2: menos workers + batch
+  - { workers: 0, batch: 0.30, cache: false }   # intento 3: mínimo absoluto
+
+# ---------------------------------------------------------------------------
+# Validación
+# ---------------------------------------------------------------------------
+val:
+  data: /dataset/
+  device: 0
+  imgsz: 640
+
+# ---------------------------------------------------------------------------
+# Extras
+# ---------------------------------------------------------------------------
+extras:
+  gpu:
+    id: 0
+    limit: 0.60
+
+# ---------------------------------------------------------------------------
+# Metadata del experimento
+# ---------------------------------------------------------------------------
+metadata:
+  content: "Entrenamiento que busca mejorar las métricas de clasificación"
+  author: "William Rodriguez"
+  documentation: >
+    Este modelo fue entrenado con datos hasta febrero 2026, unificando todos
+    los anteriores entrenamientos, pero manteniendo un área mínima de 150px²,
+    buscando que haya un mínimo número de píxeles que aporten información al
+    modelo en la etapa de aprendizaje. Se activa también un aumentado de datos
+    controlado para mejorar la cantidad de muestras. Los datos fueron separados
+    en 80% para train, 12% para val y 8% para test.
