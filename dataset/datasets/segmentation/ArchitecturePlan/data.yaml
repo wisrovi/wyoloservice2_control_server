@@ -1,5 +1,5 @@
-train: /datasets/segmentacion/ArchitecturePlan/train/images
-val: /datasets/segmentacion/ArchitecturePlan/valid/images
+train: /datasets/segmentation/ArchitecturePlan/train/images
+val: /datasets/segmentation/ArchitecturePlan/valid/images
 
 nc: 12
 names: ['balcony', 'bathroom', 'bedroom', 'children_room', 'dining_room', 'hallway', 'home_office', 'kitchen', 'living_room', 'toilet', 'utility_room', 'walk_in_closet']

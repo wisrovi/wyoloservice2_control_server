@@ -3,14 +3,14 @@ type: "yolo"
 # dvc_data_path: /datasets/clasificacion/colorball.v8i.multiclass.dvc
 train:
   batch: -1
-  data: /datasets/segmentacion/ArchitecturePlan/data.yaml
+  data: /datasets/segmentation/ArchitecturePlan/data.yaml
   epochs: 2
   imgsz: 640
 sweeper:
   version: 1
   algorithm: optuna
   direction: maximize
-  study_name: "example_segmentation"
+  study_name: "ArchitecturePlan"
   sampler: "TPESampler"
   fitness: "metrics/mAP50(M)"
   n_trials: 1
@@ -27,6 +27,6 @@ extras:
     id: 0
     limit: 0.60
 metadata:
-  content: "Este es un entrenamiento de prueba de manuel"
+  content: "Este es un entrenamiento de prueba de Wisrovi"
   author: "Manu G"
   documentation: "Este modelo fue entrenado con datos de marzo 2025."
