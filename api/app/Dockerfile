@@ -18,7 +18,7 @@ RUN pip install -r /requirements/requirements.txt
 WORKDIR /code/app
 COPY ./code_api .
 
-WORKDIR /code/
+WORKDIR /code/app
 
 EXPOSE 8000
 
@@ -31,4 +31,4 @@ EXPOSE 8000
 
 
 # with uvicorn: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 8
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "8"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "8"]
