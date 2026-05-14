@@ -1,0 +1,37 @@
+=== TRAINING SUMMARY ===
+
+Experiment: elektronik_v2
+Task ID: test_training_001
+Model: yolov8n.pt
+Type: yolo
+Dataset: Deteksi komponen elektronik.v1i.yolov8
+Training Time: 44.26 seconds
+Timestamp: 20251211_144139
+
+=== METRICS ===
+
+metrics/precision(B): 0.00484607870160359
+metrics/recall(B): 1.0
+metrics/mAP50(B): 0.6249285539729089
+metrics/mAP50-95(B): 0.40594542596802585
+fitness: 0.40594542596802585
+
+=== ARTIFACTS ===
+
+Training artifacts copied to this directory:
+- BoxF1_curve.png
+- BoxPR_curve.png
+- BoxP_curve.png
+- BoxR_curve.png
+- args.yaml
+- confusion_matrix.png
+- confusion_matrix_normalized.png
+- labels.jpg
+- results.csv
+- results.png
+- train_batch0.jpg
+- train_batch1.jpg
+- train_batch2.jpg
+- val_batch0_labels.jpg
+- val_batch0_pred.jpg
+- weights
