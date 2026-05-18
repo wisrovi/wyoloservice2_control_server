@@ -1,62 +1,97 @@
-# --------------------------------------------------
-# Docker-in-Docker
-# --------------------------------------------------
+# Makefile for Celery ML Cluster - NeuralForgeAI
 
-start_dind:
-	docker-compose -f docker-compose.dind.yaml up -d --build
+.PHONY: help build build-all up down worker-up worker-down test logs clean
 
-	docker-compose -f docker-compose.dind.yaml exec dind_environment sh -c "cd /app && docker-compose up -d"
-	docker-compose -f docker-compose.dind.yaml exec dind_media sh -c "cd /app && docker-compose up -d"
-	docker-compose -f docker-compose.dind.yaml exec dind_api sh -c "cd /app && docker-compose up -d"
+# Variables - Rutas a los repositorios
+CONTROL_SERVER = ./wyoloservice2_control_server
+MANAGER = ./wyoloservice2_manager
+INVOKER = ./wyoloservice2_invoker
+EXECUTOR = ./wyoloservice2_worker/executor
+NEURALFORGEAI = ./NeuralForgeAI
 
-stop_dind:
-	docker-compose -f docker-compose.dind.yaml down
+help: ## Muestra esta ayuda
+	@echo ""
+	@echo "NeuralForgeAI - Distributed YOLO Training Cluster"
+	@echo ""
+	@echo "Uso:"
+	@echo "  make \033[36m<objetivo>\033[0m"
+	@echo ""
+	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1mObjetivos:\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } ' $(MAKEFILE_LIST)
 
-build_dind:
-	docker-compose -f docker-compose.dind.yaml build
+##@ Build Images
 
-into_environment:
-	docker-compose -f docker-compose.dind.yaml exec dind_environment sh
+build-control-server: ## Construye la imagen del Control Server (API + Gradio)
+	docker build -t wisrovi/train_service:control_server_v1.0.0 $(CONTROL_SERVER)
 
-into_media:
-	docker-compose -f docker-compose.dind.yaml exec dind_media sh
+build-manager: ## Construye la imagen del Manager (Optuna Orchestrator)
+	docker build -t wisrovi/train_service/manager:orchestrator_v1.0.0 $(MANAGER)
 
-into_api:
-	docker-compose -f docker-compose.dind.yaml exec dind_api sh
+build-invoker: ## Construye la imagen del Worker Invoker
+	docker build -t wisrovi/train_service:worker_invoker_v1.0.0 $(INVOKER)
 
-logs_environment:
-	docker-compose -f docker-compose.dind.yaml exec dind_environment sh -c "cd /app && docker-compose logs -f"
+build-executor: ## Construye la imagen del Worker Executor (YOLO)
+	docker build -t wisrovi/train_service:worker_executor_v1.0.0 $(EXECUTOR)
 
-logs_media:
-	docker-compose -f docker-compose.dind.yaml exec dind_media sh -c "cd /app && docker-compose logs -f"
+build-neuralforgeai: ## Construye la imagen de NeuralForgeAI (React)
+	docker build -t wisrovi/neuralforgeai:v1.0.0 $(NEURALFORGEAI)
 
-logs_api:
-	docker-compose -f docker-compose.dind.yaml exec dind_api sh -c "cd /app && docker-compose logs -f"
+build-all: build-control-server build-manager build-invoker build-executor build-neuralforgeai ## Construye todas las imágenes
 
-restart_environment:
-	docker-compose -f docker-compose.dind.yaml exec dind_environment sh -c "cd /app && docker-compose restart"
+##@ Deployment
 
-restart_media:
-	docker-compose -f docker-compose.dind.yaml exec dind_media sh -c "cd /app && docker-compose restart"
+up: ## Levanta el plano de control (API + Manager + Redis + PostgreSQL)
+	cd $(CONTROL_SERVER) && docker-compose up -d --build
 
-restart_api:
-	docker-compose -f docker-compose.dind.yaml exec dind_api sh -c "cd
+down: ## Detiene el plano de control
+	cd $(CONTROL_SERVER) && docker-compose down
 
+worker-up: ## Levanta el Worker Invoker (para nodos GPU remotos)
+	cd $(INVOKER) && docker-compose up -d --build
 
-# --------------------------------------------------
-# Basic
-# --------------------------------------------------
-start_basic:
-	docker-compose -f docker-compose.basic.yaml --env-file config/control_host.env --compatibility up -d --build  --force-recreate --no-deps  --pull always
+worker-down: ## Detiene el Worker Invoker
+	cd $(INVOKER) && docker-compose down
 
-stop_basic:
-	docker-compose -f docker-compose.basic.yaml --env-file config/control_host.env down
+##@ Push Images
 
-create_network:
-	docker network create wyoloservice_network || true
+push-control-server: ## Sube imagen del Control Server
+	docker push wisrovi/train_service:control_server_v1.0.0
 
-start_api_only:
-	docker-compose -f docker-compose.basic.yaml --env-file config/control_host.env --compatibility up -d --build --force-recreate --no-deps --pull always neuroforge-api
+push-manager: ## Sube imagen del Manager
+	docker push wisrovi/train_service/manager:orchestrator_v1.0.0
 
-.PHONY: start stop into_environment into_media into_api logs_environment logs_media logs_api restart_environment restart_media restart_api
+push-invoker: ## Sube imagen del Invoker
+	docker push wisrovi/train_service:worker_invoker_v1.0.0
 
+push-executor: ## Sube imagen del Executor
+	docker push wisrovi/train_service:worker_executor_v1.0.0
+
+push-neuralforgeai: ## Sube imagen de NeuralForgeAI
+	docker push wisrovi/neuralforgeai:v1.0.0
+
+push-all: push-control-server push-manager push-invoker push-executor push-neuralforgeai ## Sube todas las imágenes
+
+##@ Development
+
+test: ## Ejecuta los tests del sistema
+	cd $(CONTROL_SERVER) && bash run_tests.sh
+
+logs: ## Muestra los logs del plano de control
+	cd $(CONTROL_SERVER) && docker-compose logs -f
+
+worker-logs: ## Muestra los logs del Worker
+	cd $(INVOKER) && docker-compose logs -f
+
+clean: ## Limpia contenedores detenidos y redes huérfanas
+	docker system prune -f
+	docker network prune -f
+
+##@ Status
+
+ps: ## Muestra los contenedores en ejecución
+	docker ps --filter "name=wyolo" --filter "name=neuralforgeai" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+logs-manager: ## Muestra logs del Manager
+	docker logs $$(docker ps --filter "name=manager" -q)
+
+logs-invoker: ## Muestra logs del Invoker
+	docker logs $$(docker ps --filter "name=worker" -q)
