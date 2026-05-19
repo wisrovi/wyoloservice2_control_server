@@ -6,7 +6,7 @@ task routing.
 """
 
 from typing import Any, Optional
-
+import redis
 import yaml
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from celery.result import AsyncResult
@@ -53,6 +53,13 @@ async def start_training(
     try:
         content: bytes = await config_file.read()
         config_data: dict[str, Any] = yaml.safe_load(content)
+
+        # Robustness check: Ensure config_data is a dictionary
+        if not isinstance(config_data, dict):
+            raise HTTPException(
+                status_code=400, 
+                detail="Invalid YAML: content must be a dictionary (key-value pairs)"
+            )
 
         # Determine the target worker queue based on mode and priority
         if mode == "private":
@@ -101,7 +108,7 @@ async def get_available_workers() -> list[str]:
     Returns:
         list[str]: A sorted list of private queue names (starting with 'worker_').
     """
-    import redis
+    
 
     workers = set()
     try:

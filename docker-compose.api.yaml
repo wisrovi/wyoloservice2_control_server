@@ -1,0 +1,31 @@
+services:
+  fastapi:
+    build: ./api
+    image: wisrovi/train_service/api/server:v1.0.0
+    ports:
+      - "23442:8000"
+    env_file:
+      - control_host.env
+    volumes:
+      - ./api:/app
+    networks:
+      - control_network
+
+  gui:
+    build: ./interfaz
+    image: wisrovi/train_service/interfaz/ui:v1.0.0
+    ports:
+      - "23444:7860"
+    environment:
+      - API_URL=http://fastapi:8000
+    depends_on:
+      - fastapi
+    volumes:
+      - ./interfaz:/app
+    networks:
+      - control_network
+
+networks:
+  control_network:
+    name: control_network
+    external: true
