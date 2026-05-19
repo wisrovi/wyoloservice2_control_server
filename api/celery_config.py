@@ -9,7 +9,8 @@ from typing import Any
 from celery import Celery
 
 # Get Redis URL from environment or default to localhost
-REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CONTROL_HOST = os.getenv("CONTROL_HOST", "localhost")
+REDIS_URL: str = f"redis://{CONTROL_HOST}:23437/0"
 
 app: Celery = Celery("ml_cluster", broker=REDIS_URL, backend=REDIS_URL)
 
