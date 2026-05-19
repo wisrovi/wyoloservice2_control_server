@@ -61,26 +61,21 @@ async def start_training(
                 detail="Invalid YAML: content must be a dictionary (key-value pairs)"
             )
 
-        # Determine the target worker queue based on mode and priority
+        # Determine the target worker queue based on mode
         if mode == "private":
             if not worker_name:
                 raise HTTPException(
                     status_code=400, detail="Worker name is required for private mode"
                 )
-            target_worker_queue: str = worker_name
+            # Inject targeting information ONLY for private mode
+            if "sweeper" not in config_data:
+                config_data["sweeper"] = {}
+            config_data["sweeper"]["target_worker_queue"] = worker_name
+            target_info = f"private:{worker_name}"
         else:
-            # Map priority labels to specific queues for strict ordering
-            priority_map: dict[str, str] = {
-                "high": "gpus_high",
-                "medium": "gpus_medium",
-                "low": "gpus_low",
-            }
-            target_worker_queue = priority_map.get(priority.lower(), "gpus_medium")
-
-        # Inject targeting information for the Manager orchestrator
-        if "sweeper" not in config_data:
-            config_data["sweeper"] = {}
-        config_data["sweeper"]["target_worker_queue"] = target_worker_queue
+            # In public mode, we don't inject target_worker_queue to let the Manager 
+            # use its default logic (same as the test script)
+            target_info = f"public:{priority}"
 
         # Dispatch the study management task to the Celery 'managers' queue
         job: AsyncResult = celery_app.send_task(
@@ -91,7 +86,7 @@ async def start_training(
             "status": "Queued",
             "study_id": str(job.id),
             "mode": mode,
-            "worker_queue": target_worker_queue,
+            "routing": target_info,
         }
     except yaml.YAMLError as exc:
         raise HTTPException(
