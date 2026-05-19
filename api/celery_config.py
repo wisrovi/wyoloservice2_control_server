@@ -12,7 +12,7 @@ from celery import Celery
 CONTROL_HOST = os.getenv("CONTROL_HOST", "localhost")
 REDIS_URL: str = f"redis://{CONTROL_HOST}:23437/0"
 
-app: Celery = Celery("ml_cluster", broker=REDIS_URL, backend=REDIS_URL)
+app: Celery = Celery("neuralforge_launcher", broker=REDIS_URL, backend=REDIS_URL)
 
 # Configuration for task routing
 app.conf.task_routes = {

@@ -1,0 +1,50 @@
+model: "yolov8n-cls.pt"
+type: "yolo"
+train:
+  batch: 0.85
+  data: /datasets/examples/clasification/colorball.v8i.multiclass/
+  epochs: 2
+  imgsz: 640
+  cos_lr: true        # recomendado por defecto
+  lr0: 0.01
+  lrf: 0.01           # lrf bajo → convergencia más estable al final
+  dropout: 0.0
+  erasing: 0.0
+  device: 0
+  workers: 8          # fallback lo reducirá si hay OOM
+# val:
+#   conf: 0.01
+# test:
+#   conf: 0.01
+sweeper:
+  version: 1
+  algorithm: optuna
+  direction: maximize
+  sampler: "TPESampler"
+
+  fitness: "metrics/accuracy_top1"
+  study_name: "color_ball_v3"
+  n_trials: 3
+
+  # tune: true
+  priority: "low"
+  search_space:
+    model: [ "choice", "yolov8n-cls.pt", "yolov8s-cls.pt", "yolov8m-cls.pt" ]
+    train:
+      imgsz:        [ "choice", 416, 640, 720, 960, 1080 ]
+      epochs:       ["choice", 150, 200, 300]
+      lr0:          ["loguniform", 1e-4, 1e-2]
+      lrf:          ["choice", 0.01, 0.2]
+      weight_decay: ["loguniform", 1e-5, 1e-3]
+      dropout:      ["choice", 0.0, 0.1, 0.25]
+      mixup:        ["choice", 0.0, 0.1, 0.2]
+      cos_lr:       ["choice", true, false]
+
+extras:
+  gpu:
+    id: 0
+    limit: 0.95
+metadata:
+  content: "Este es un experimento de clasificación de imágenes."
+  author: "William Rodriguez"
+  documentation: "Este modelo fue entrenado con datos del 2025."
