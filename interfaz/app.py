@@ -78,7 +78,7 @@ def start_training(config_file, mode, priority, worker_name):
 
 📋 <b>Study ID:</b> <code>{res["study_id"]}</code>
 🔧 <b>Mode:</b> {res["mode"]}
-🎯 <b>Worker/Queue:</b> {res["worker_queue"]}
+🎯 <b>Worker/Queue:</b> {res["routing"]}
 
 ⏰ <b>Time:</b> {datetime.now().strftime("%H:%M:%S")}"""
         return f"❌ Error: {r.text}"
