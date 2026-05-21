@@ -1,0 +1,27 @@
+model: "yolov8n-seg.pt"
+type: "yolo"
+train:
+  batch: 4
+  data: /datasets/examples/segmentation/architecture_plan/data.yaml
+  epochs: 1
+  imgsz: 640
+  device: 0
+sweeper:
+  version: 1
+  algorithm: optuna
+  direction: maximize
+  fitness: "metrics/mAP50-95(M)"
+  study_name: "test_segmentation_v2"
+  tune: false
+  sampler: "TPESampler"
+  n_trials: 1
+  priority: "low"
+
+extras:
+  gpu:
+    id: 0
+    limit: 0.95
+metadata:
+  content: "Experimento de segmentación de planos arquitectónicos (Fixed Path)."
+  author: "William Rodriguez"
+  documentation: "Dataset de segmentación YOLOv8"

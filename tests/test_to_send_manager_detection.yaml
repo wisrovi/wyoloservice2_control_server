@@ -1,0 +1,27 @@
+model: "yolov8n.pt"
+type: "yolo"
+train:
+  batch: 8
+  data: /datasets/examples/detection/eletronic_components/data.yaml
+  epochs: 1
+  imgsz: 640
+  device: 0
+sweeper:
+  version: 1
+  algorithm: optuna
+  direction: maximize
+  fitness: "metrics/mAP50-95(B)"
+  study_name: "test_detection_v2"
+  tune: false
+  sampler: "TPESampler"
+  n_trials: 1
+  priority: "low"
+
+extras:
+  gpu:
+    id: 0
+    limit: 0.95
+metadata:
+  content: "Experimento de detección de componentes electrónicos (Fixed Path)."
+  author: "William Rodriguez"
+  documentation: "Dataset de detección YOLOv8"

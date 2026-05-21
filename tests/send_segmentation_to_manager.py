@@ -1,6 +1,5 @@
 REDIS_HOST = "192.168.1.137"
 
-
 import yaml
 import os
 import sys
@@ -13,14 +12,12 @@ REDIS_PORT = "23437"
 REDIS_HOST = os.getenv("CONTROL_HOST", REDIS_HOST)
 REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 
-
 celery_app = Celery("neuralforge_launcher", broker=REDIS_URL, backend=REDIS_URL)
 
-
-def send_test_study():
+def send_test_study(yaml_filename):
     # Use relative path based on this script's location
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    yaml_path = os.path.join(base_dir, "test_to_send_manager.yaml")
+    yaml_path = os.path.join(base_dir, yaml_filename)
 
     if not os.path.exists(yaml_path):
         print(f"[-] Error: {yaml_path} not found.")
@@ -48,8 +45,6 @@ def send_test_study():
         print("=" * 40)
     except Exception as e:
         print(f"[-] Error sending task: {e}")
-        print("[!] Ensure CONTROL_HOST or REDIS_URL is set in your environment.")
-
 
 if __name__ == "__main__":
-    send_test_study()
+    send_test_study("test_to_send_manager_segmentation.yaml")

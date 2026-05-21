@@ -1,7 +1,7 @@
 services:
   fastapi:
     build: ./api
-    image: wisrovi/train_service/api/server:v1.0.0
+    image: wisrovi/train_service:api_server_v1.0.0
     ports:
       - "23442:8000"
     env_file:
@@ -13,7 +13,7 @@ services:
 
   gui:
     build: ./interfaz
-    image: wisrovi/train_service/interfaz/ui:v1.0.0
+    image: wisrovi/train_service:interfaz_ui_v1.0.0
     ports:
       - "23444:7860"
     environment:
