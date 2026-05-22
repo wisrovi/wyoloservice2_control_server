@@ -6,6 +6,7 @@ task routing.
 """
 
 from typing import Any, Optional
+import shutil
 import redis
 import yaml
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
@@ -14,7 +15,137 @@ from celery.result import AsyncResult
 # Import Celery app from the local configuration
 from celery_config import app as celery_app
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app: FastAPI = FastAPI(title="ML CLUSTER API v5 - Strict Priority & Private Mode")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/workers/count")
+async def get_workers_count() -> dict[str, int]:
+    """Returns the count of active workers."""
+    workers = await get_available_workers()
+    return {"count": len(workers), "value": len(workers)}
+
+@app.get("/tasks/count")
+async def get_tasks_count() -> dict[str, int]:
+    """Returns the count of tasks in the managers queue."""
+    try:
+        r = redis.from_url(celery_app.conf.broker)
+        count = r.llen("managers")
+        return {"count": count, "value": count}
+    except Exception:
+        return {"count": 0, "value": 0}
+
+@app.get("/tasks/active")
+async def get_active_tasks() -> dict[str, Any]:
+    """Returns a list of currently active tasks."""
+    try:
+        # Increase timeout for inspector to wait for worker replies
+        inspector = celery_app.control.inspect(timeout=1.0)
+        active = inspector.active()
+        tasks = []
+        if active:
+            for worker_name, worker_tasks in active.items():
+                for task in worker_tasks:
+                    # Clean up worker name
+                    short_worker = worker_name.split('@')[-1]
+                    
+                    tasks.append({
+                        "id": task.get("id"),
+                        "name": task.get("name", "Unknown"),
+                        "worker": short_worker,
+                        "runtime": round(task.get("runtime", 0), 1),
+                        "epoch": "Orchestrating..." if "manage_study" in task.get("name", "") else "Training...",
+                        "progress": 50 if "manage_study" in task.get("name", "") else 20, # Simulation
+                        "map": "0.000"
+                    })
+        return {"jobs": tasks, "value": len(tasks)}
+    except Exception as e:
+        print(f"Error fetching active tasks: {e}")
+        return {"jobs": [], "value": 0}
+
+@app.get("/metrics/gpu")
+async def get_gpu_metrics() -> dict[str, Any]:
+    """Returns simulated or real GPU utilization metrics."""
+    return {"utilization": 45.5, "unit": "%", "value": 45.5}
+
+@app.get("/metrics/storage")
+async def get_storage_metrics() -> dict[str, Any]:
+    """Returns storage usage metrics for the datasets directory."""
+    import os
+    path = "/wyolo/control_server/datasets"
+    if not os.path.exists(path):
+        path = "/app"
+        
+    try:
+        usage = shutil.disk_usage(path)
+        percent = (usage.used / usage.total) * 100
+        # Convert to TB for dashboard display
+        val_tb = round(usage.used / (1024**4), 2)
+        return {
+            "used": usage.used,
+            "total": usage.total,
+            "percent": percent,
+            "value": val_tb if val_tb > 0 else round(usage.used / (1024**3), 2) # Show GB if TB is 0
+        }
+    except Exception:
+        return {"used": 0, "total": 0, "percent": 0, "value": 0}
+
+@app.get("/metrics/redis")
+async def get_redis_metrics() -> dict[str, Any]:
+    """Returns Redis memory usage metrics."""
+    try:
+        r = redis.from_url(celery_app.conf.broker)
+        info = r.info("memory")
+        used_gb = round(info.get("used_memory", 0) / (1024**3), 2)
+        return {
+            "used_memory": info.get("used_memory_human"),
+            "peak_memory": info.get("used_memory_peak_human"),
+            "value": 8,  # Total GB simulation
+            "used_gb": used_gb
+        }
+    except Exception:
+        return {"used_memory": "0B", "peak_memory": "0B", "value": 0, "used_gb": 0}
+
+
+import json
+
+# Connection for shared persistence (Users/Projects) - Use DB 2 to avoid Celery conflict
+shared_db = redis.from_url(celery_app.conf.broker_url.replace("/0", "/2"))
+
+# --- PERSISTENCE ENDPOINTS (Users & Projects) ---
+
+@app.get("/config/users")
+async def get_users():
+    """Retrieves all registered users from shared storage."""
+    data = shared_db.get("registry:users")
+    return json.loads(data) if data else []
+
+@app.post("/config/users")
+async def save_users(users: list[dict[str, Any]]):
+    """Overwrites the user registry in shared storage."""
+    shared_db.set("registry:users", json.dumps(users))
+    return {"status": "success"}
+
+@app.get("/config/projects")
+async def get_projects():
+    """Retrieves all registered projects from shared storage."""
+    data = shared_db.get("registry:projects")
+    return json.loads(data) if data else []
+
+@app.post("/config/projects")
+async def save_projects(projects: list[dict[str, Any]]):
+    """Overwrites the project registry in shared storage."""
+    shared_db.set("registry:projects", json.dumps(projects))
+    return {"status": "success"}
 
 
 @app.post("/train")
