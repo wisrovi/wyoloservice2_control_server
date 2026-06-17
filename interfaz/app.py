@@ -594,7 +594,7 @@ with gr.Blocks(css=css) as demo:
 
     gr.HTML("""
         <div class="footer">
-            ML Cluster Control Panel v2.0 | FastAPI • Celery • Gradio
+            ML Cluster Monitoring Panel v2.0 | Gradio • UI for NeuralForgeAI API
         </div>
     """)
 
