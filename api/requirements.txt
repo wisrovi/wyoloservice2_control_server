@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-celery
-redis
-PyYAML
-pydantic
-python-multipart

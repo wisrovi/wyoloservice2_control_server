@@ -1,4 +1,4 @@
-start: ## Levanta el plano de control (API + Manager + Redis + PostgreSQL)
+start: ## Levanta la interfaz de monitoreo Gradio
 	docker-compose -f docker-compose.api.yaml up -d --build
 
 stop: ## Detiene el plano de control
