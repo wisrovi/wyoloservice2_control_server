@@ -17,7 +17,7 @@ All project images follow a standardized naming pattern for consistency across r
 | **Manager** | `wisrovi/train_service/manager:orchestrator_v1.0.0` | Optuna-based orchestrator |
 | **Worker Invoker** | `wisrovi/train_service:worker_invoker_v1.0.0` | Celery worker (Docker manager) |
 | **Worker Executor** | `wisrovi/train_service:worker_executor_v1.0.0` | Ephemeral training container |
-| **NeuralForgeAI** | `wisrovi/neuralforgeai:v1.0.0` | React frontend UI |
+| **NeuralForgeAI** | `wisrovi/train_service:w_darwin_ops_frontend_v1.1.0` | React frontend UI |
 
 ## Build and Push Commands (Este Repo)
 
