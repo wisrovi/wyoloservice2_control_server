@@ -45,6 +45,7 @@ flowchart TD
 | `environment/` | Docker Compose files launching Redis and Postgres |
 | `docker-compose.api.yml` | Orchestration config for the Gradio UI |
 | `Makefile` | Utility tasks to build, run, and halt docker containers |
+| `monitor_training.py` | CLI tool to map active trials to invokers and get remote logging commands |
 
 ---
 
@@ -73,6 +74,18 @@ The Gradio web interface connects to the FastAPI Gateway:
 environment:
   - API_URL=http://<MASTER_IP>:23442
 ```
+
+---
+
+## 📊 Monitoring Training Logs
+
+When you send a training study to a public queue, it is distributed among active invokers. To easily identify which invoker node has taken your task and fetch the training logs, you can run the helper monitoring script:
+
+```bash
+./monitor_training.py
+```
+
+This tool connects directly to the API, lists active tasks, finds the worker IP, and prints the exact `ssh` commands to stream live Docker logs or view the persistent log files on the corresponding GPU node.
 
 ---
 
