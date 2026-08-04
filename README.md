@@ -91,7 +91,11 @@ This tool connects directly to the API, lists active tasks, finds the worker IP,
 
 ## 📜 Changelog & Version History
 
-### Version 2.0.0 (Current Release) - 2026-07-03
+### Version 2.1.0 (Current Release) - 2026-08-04
+*   **Sweeper Hyperparameter Tuning:** Enabled `lr0`, `momentum`, `freeze`, and `optimizer` hyperparameters in the ArchitecturePlan segmentation `config_train.yaml`.
+*   **Config Cleanup:** Removed unused `batch: -1` fields and commented `val`/`test` conf blocks from classification and detection dataset configs.
+
+### Version 2.0.0 - 2026-07-03
 *   **Port Mapping Refactoring:** Updated the API URL mapping to point to port `23442` (REST Gateway) and Gradio to port `23444`.
 *   **Decoupled Stack Cleanup:** Cleaned old compose configurations to align with the React-based `WDarwin Ops` frontend.
 
